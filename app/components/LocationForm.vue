@@ -49,9 +49,9 @@
 			<label for="viewingLevel">Viewing Level:</label>
 			<select id="viewingLevel" v-model="formData.viewingLevel">
 				<option value="naked-eye">Naked Eye</option>
-				<option value="entry">Entry</option>
-				<option value="intermediate">Intermediate</option>
-				<option value="advanced">Advanced</option>
+				<option value="entry">Entry-Level Telescope</option>
+				<option value="intermediate">Intermediate Telescope</option>
+				<option value="advanced">Advanced Telescope</option>
 			</select>
 		</div>
 
