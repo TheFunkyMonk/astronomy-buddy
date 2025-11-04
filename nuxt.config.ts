@@ -10,6 +10,8 @@ export default defineNuxtConfig({
 		'@nuxt/ui'
 	],
 
+	ssr: false, // Use SPA mode for static hosting
+
 	app: {
 		head: {
 			title: 'Astronomy Buddy',
