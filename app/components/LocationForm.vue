@@ -35,6 +35,14 @@
 			/>
 		</div>
 
+		<button @click="handleFillLocation" :disabled="geolocationLoading">
+			{{ geolocationLoading ? 'Getting location...' : 'Fill it for me' }}
+		</button>
+		<p class="location-note">Requires location access</p>
+		<p v-if="showElevationNote" class="elevation-note">
+			If elevation didn't fill in, try <a href="https://whatismyelevation.com/" target="_blank" rel="noopener">whatismyelevation.com</a>
+		</p>
+
 		<h3>Optional Parameters</h3>
 
 		<div class="form-group">
@@ -65,15 +73,13 @@
 			/>
 		</div>
 
-		<button @click="handleFillLocation" :disabled="geolocationLoading">
-			{{ geolocationLoading ? 'Getting location...' : 'Fill it for me' }}
-		</button>
-
 		<button @click="handleSubmit" :disabled="isFetching || !canSubmit" class="submit-btn">
 			{{ isFetching ? 'Loading...' : 'Get Viewing Data' }}
 		</button>
 
-		<div v-if="error" class="error">{{ error }}</div>
+		<Transition name="slide-fade">
+			<div v-if="error" class="error">{{ error }}</div>
+		</Transition>
 	</div>
 </template>
 
@@ -100,6 +106,8 @@ const formData = ref({
 	eveningStartHour: 21,
 	eveningEndHour: 2
 })
+
+const showElevationNote = ref(false)
 
 // Time inputs in HH:MM format
 const eveningStartTime = ref('21:00')
@@ -136,6 +144,11 @@ const handleFillLocation = async () => {
 		formData.value.latitude = location.latitude
 		formData.value.longitude = location.longitude
 		formData.value.elevation = location.elevation
+
+		// Show elevation note if elevation wasn't filled in
+		if (!location.elevation) {
+			showElevationNote.value = true
+		}
 	}
 }
 
@@ -146,21 +159,23 @@ const handleSubmit = () => {
 
 <style scoped>
 .location-form {
-	background: #f5f5f5;
+	background: #2f2f2f;
 	padding: 2rem;
 	border-radius: 8px;
+	border: 1px solid #3a3a3a;
 }
 
 h2 {
 	margin-top: 0;
 	margin-bottom: 1.5rem;
+	color: #e8e8e8;
 }
 
 h3 {
 	margin-top: 1.5rem;
 	margin-bottom: 1rem;
 	font-size: 1.1rem;
-	color: #333;
+	color: #e8e8e8;
 }
 
 .form-group {
@@ -171,16 +186,29 @@ label {
 	display: block;
 	margin-bottom: 0.5rem;
 	font-weight: 500;
+	color: #c0c0c0;
 }
 
 input,
 select {
 	width: 100%;
 	padding: 0.5rem;
-	border: 1px solid #ccc;
+	border: 1px solid #4a4a4a;
 	border-radius: 4px;
 	font-size: 1rem;
 	box-sizing: border-box;
+	background: #3a3a3a;
+	color: #e8e8e8;
+}
+
+input:focus,
+select:focus {
+	outline: none;
+	border-color: #0066cc;
+}
+
+input::placeholder {
+	color: #707070;
 }
 
 button {
@@ -200,8 +228,9 @@ button:hover:not(:disabled) {
 }
 
 button:disabled {
-	background: #999;
+	background: #4a4a4a;
 	cursor: not-allowed;
+	color: #888;
 }
 
 .submit-btn {
@@ -212,11 +241,55 @@ button:disabled {
 	background: #218838;
 }
 
+.location-note {
+	font-size: 0.85rem;
+	font-style: italic;
+	color: #999;
+	margin: 0.5rem 0 0 0;
+	text-align: center;
+}
+
+.elevation-note {
+	font-size: 0.85rem;
+	font-style: italic;
+	color: #999;
+	margin: 0.75rem 0 0 0;
+	text-align: center;
+}
+
+.elevation-note a {
+	color: #4da6ff;
+	text-decoration: none;
+}
+
+.elevation-note a:hover {
+	text-decoration: underline;
+}
+
 .error {
-	color: #d32f2f;
+	color: #ff6b6b;
 	margin-top: 1rem;
 	padding: 0.5rem;
-	background: #ffebee;
+	background: #3a2a2a;
 	border-radius: 4px;
+	border: 1px solid #4a3a3a;
+}
+
+.slide-fade-enter-active {
+	transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+	transition: all 0.2s ease-in;
+}
+
+.slide-fade-enter-from {
+	opacity: 0;
+	transform: translateY(-10px);
+}
+
+.slide-fade-leave-to {
+	opacity: 0;
+	transform: translateY(-10px);
 }
 </style>
