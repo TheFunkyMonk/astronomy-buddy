@@ -24,7 +24,10 @@
 					<h4 class="rating-excellent">⭐ Excellent Viewing</h4>
 					<div v-for="target in data.targets.excellent" :key="target.name" class="target-card">
 						<div class="target-header">
-							<h5>{{ target.name }}</h5>
+							<div class="target-title">
+								<img v-if="getPlanetImage(target.name)" :src="getPlanetImage(target.name)" :alt="target.name" class="planet-icon">
+								<h5>{{ target.name }}</h5>
+							</div>
 							<span class="constellation">{{ target.constellation }}</span>
 						</div>
 						<p class="target-reason">{{ target.reason }}</p>
@@ -41,7 +44,10 @@
 					<h4 class="rating-good">✨ Good Viewing</h4>
 					<div v-for="target in data.targets.good" :key="target.name" class="target-card">
 						<div class="target-header">
-							<h5>{{ target.name }}</h5>
+							<div class="target-title">
+								<img v-if="getPlanetImage(target.name)" :src="getPlanetImage(target.name)" :alt="target.name" class="planet-icon">
+								<h5>{{ target.name }}</h5>
+							</div>
 							<span class="constellation">{{ target.constellation }}</span>
 						</div>
 						<p class="target-reason">{{ target.reason }}</p>
@@ -58,7 +64,10 @@
 					<h4 class="rating-fair">💫 Fair Viewing</h4>
 					<div v-for="target in data.targets.fair" :key="target.name" class="target-card">
 						<div class="target-header">
-							<h5>{{ target.name }}</h5>
+							<div class="target-title">
+								<img v-if="getPlanetImage(target.name)" :src="getPlanetImage(target.name)" :alt="target.name" class="planet-icon">
+								<h5>{{ target.name }}</h5>
+							</div>
 							<span class="constellation">{{ target.constellation }}</span>
 						</div>
 						<p class="target-reason">{{ target.reason }}</p>
@@ -123,6 +132,26 @@
 		if (hour < 12) return `${hour}:00 AM`
 		if (hour === 12) return '12:00 PM'
 		return `${hour - 12}:00 PM`
+	}
+
+	const getPlanetImage = (targetName) => {
+		// Map target names to planet image filenames
+		const planetMap = {
+			'Moon': 'moon',
+			'Mercury': 'mercury',
+			'Venus': 'venus',
+			'Mars': 'mars',
+			'Jupiter': 'jupiter',
+			'Saturn': 'saturn',
+			'Uranus': 'uranus',
+			'Neptune': 'neptune'
+		}
+
+		const planetKey = planetMap[targetName]
+		if (planetKey) {
+			return `/planets/${planetKey}.png`
+		}
+		return null
 	}
 </script>
 
@@ -250,6 +279,18 @@
 		margin: 0;
 		font-size: 1.1rem;
 		color: #e8e8e8;
+	}
+
+	.target-title {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.planet-icon {
+		width: 1.5em;
+		height: 1.5em;
+		object-fit: contain;
 	}
 
 	.constellation {
