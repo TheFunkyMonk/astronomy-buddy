@@ -86,13 +86,6 @@
 <script setup>
 import useGeolocation from '../../composables/useGeolocation'
 
-const props = defineProps({
-	isFetching: {
-		type: Boolean,
-		default: false
-	}
-})
-
 const emit = defineEmits(['submit'])
 
 // Initialize geolocation composable

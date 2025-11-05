@@ -26,6 +26,13 @@ const handleFormSubmit = (formData) => {
 	fetchViewingData(formData)
 	showForm.value = false
 }
+
+// Scroll to top when viewing data is loaded
+watch(viewingData, (newData) => {
+	if (newData) {
+		window.scrollTo({ top: 0, behavior: 'smooth' })
+	}
+})
 </script>
 
 <style>
