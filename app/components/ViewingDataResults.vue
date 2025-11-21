@@ -4,7 +4,7 @@
 			<!-- Weather Assessment -->
 			<div class="weather-card" :class="weatherClass">
 				<h2>{{ weatherEmoji }} {{ weatherTitle }}</h2>
-				<p class="weather-verdict">{{ data.weather.worthObserving ? 'Great night for stargazing!' : 'Not ideal for stargazing tonight.' }}</p>
+				<p class="weather-verdict">{{ weatherVerdict }}</p>
 				<div class="weather-details">
 					<p><strong>Conditions:</strong> {{ data.weather.reasons.join(', ') }}</p>
 					<div class="weather-stats">
@@ -15,9 +15,35 @@
 				</div>
 			</div>
 
+			<!-- Viewing Windows (for partial conditions) -->
+			<div v-if="data.weather.viewingWindows?.length" class="viewing-windows">
+				<h3>⏰ Clear Viewing Windows</h3>
+				<p class="windows-intro">Take advantage of these clear periods for the best stargazing:</p>
+
+				<div class="window-cards">
+					<div
+						v-for="(window, index) in data.weather.viewingWindows"
+						:key="index"
+						class="window-card"
+						:class="{ 'best-window': isBestWindow(window) }"
+					>
+						<div class="window-header">
+							<span class="window-time">{{ window.startTime }} - {{ window.endTime }}</span>
+							<span v-if="isBestWindow(window)" class="best-badge">Best</span>
+						</div>
+						<div class="window-stats">
+							<span>{{ window.duration }}h duration</span>
+							<span>Cloud: {{ window.avgCloudCover }}/10</span>
+							<span>Seeing: {{ window.avgSeeing }}/10</span>
+							<span>Transparency: {{ window.avgTransparency }}/10</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<!-- Viewing Targets -->
 			<div v-if="hasTargets" class="targets-section">
-				<h3>🔭 {{ data.weather.worthObserving ? 'What to Look For Tonight' : 'Best Positioned Objects (Despite Conditions)' }}</h3>
+				<h3>🔭 {{ targetsTitle }}</h3>
 
 				<!-- Excellent Targets -->
 				<div v-if="data.targets.excellent?.length" class="target-group">
@@ -35,6 +61,9 @@
 							<span>Peak at {{ formatHour(target.peakHour) }}</span>
 							<span>{{ target.peakAltitude.toFixed(1) }}° altitude ({{ target.peakDirection }})</span>
 							<span>Visible for {{ target.visibleHours }}h</span>
+						</div>
+						<div v-if="getTargetWindows(target)" class="target-windows">
+							<span class="window-hint">🌟 {{ getTargetWindows(target) }}</span>
 						</div>
 					</div>
 				</div>
@@ -56,6 +85,9 @@
 							<span>{{ target.peakAltitude.toFixed(1) }}° altitude ({{ target.peakDirection }})</span>
 							<span>Visible for {{ target.visibleHours }}h</span>
 						</div>
+						<div v-if="getTargetWindows(target)" class="target-windows">
+							<span class="window-hint">🌟 {{ getTargetWindows(target) }}</span>
+						</div>
 					</div>
 				</div>
 
@@ -75,6 +107,9 @@
 							<span>Peak at {{ formatHour(target.peakHour) }}</span>
 							<span>{{ target.peakAltitude.toFixed(1) }}° altitude ({{ target.peakDirection }})</span>
 							<span>Visible for {{ target.visibleHours }}h</span>
+						</div>
+						<div v-if="getTargetWindows(target)" class="target-windows">
+							<span class="window-hint">🌟 {{ getTargetWindows(target) }}</span>
 						</div>
 					</div>
 				</div>
@@ -106,11 +141,15 @@
 
 	const weatherClass = computed(() => {
 		if (!props.data?.weather) return ''
+		const quality = props.data.weather.quality
+		if (quality === 'partial') return 'weather-partial'
 		return props.data.weather.worthObserving ? 'weather-good' : 'weather-poor'
 	})
 
 	const weatherEmoji = computed(() => {
 		if (!props.data?.weather) return '🌤️'
+		const quality = props.data.weather.quality
+		if (quality === 'partial') return '⛅'
 		return props.data.weather.worthObserving ? '🌟' : '☁️'
 	})
 
@@ -120,12 +159,67 @@
 		return quality.charAt(0).toUpperCase() + quality.slice(1) + ' Conditions'
 	})
 
+	const weatherVerdict = computed(() => {
+		if (!props.data?.weather) return ''
+		const quality = props.data.weather.quality
+
+		if (quality === 'partial') {
+			const windowCount = props.data.weather.viewingWindows?.length || 0
+			return `Plan around ${windowCount} clear viewing window${windowCount > 1 ? 's' : ''} tonight!`
+		}
+
+		return props.data.weather.worthObserving
+			? 'Great night for stargazing!'
+			: 'Not ideal for stargazing tonight.'
+	})
+
+	const targetsTitle = computed(() => {
+		const quality = props.data?.weather?.quality
+
+		if (quality === 'partial') {
+			return 'What to Look For During Clear Windows'
+		}
+
+		return props.data?.weather?.worthObserving
+			? 'What to Look For Tonight'
+			: 'Best Positioned Objects (Despite Conditions)'
+	})
+
 	const hasTargets = computed(() => {
 		if (!props.data?.targets) return false
 		return (props.data.targets.excellent?.length || 0) +
 			(props.data.targets.good?.length || 0) +
 			(props.data.targets.fair?.length || 0) > 0
 	})
+
+	const isBestWindow = (window) => {
+		if (!props.data?.weather?.bestWindow) return false
+		return window.startHour === props.data.weather.bestWindow.startHour &&
+			window.endHour === props.data.weather.bestWindow.endHour
+	}
+
+	const getTargetWindows = (target) => {
+		// If there are viewing windows, check if target's peak hour falls within any
+		if (!props.data?.weather?.viewingWindows?.length) return null
+
+		const peakHour = target.peakHour
+		const windows = props.data.weather.viewingWindows
+
+		const matchingWindow = windows.find(window => {
+			// Handle window that crosses midnight
+			if (window.endHour < window.startHour) {
+				return peakHour >= window.startHour || peakHour <= window.endHour
+			}
+			return peakHour >= window.startHour && peakHour <= window.endHour
+		})
+
+		if (matchingWindow) {
+			const isBest = isBestWindow(matchingWindow)
+			return `Best viewed ${matchingWindow.startTime} - ${matchingWindow.endTime}${isBest ? ' (optimal window)' : ''}`
+		}
+
+		return null
+	}
 
 	const formatHour = (hour) => {
 		if (hour === 0) return '12:00 AM'
@@ -173,6 +267,11 @@
 		background: linear-gradient(135deg, #2a3a2f 0%, #2f2f2f 100%);
 	}
 
+	.weather-card.weather-partial {
+		border-color: #fbbf24;
+		background: linear-gradient(135deg, #3a362a 0%, #2f2f2f 100%);
+	}
+
 	.weather-card.weather-poor {
 		border-color: #dc3545;
 		background: linear-gradient(135deg, #3a2a2f 0%, #2f2f2f 100%);
@@ -213,6 +312,84 @@
 		background: #3a3a3a;
 		border-radius: 4px;
 		color: #c0c0c0;
+	}
+
+	/* Viewing Windows Section */
+	.viewing-windows {
+		background: #2f2f2f;
+		padding: 1.5rem;
+		border-radius: 8px;
+		border: 2px solid #fbbf24;
+		margin-bottom: 1.5rem;
+	}
+
+	.viewing-windows h3 {
+		margin: 0 0 0.5rem 0;
+		font-size: 1.3rem;
+		color: #e8e8e8;
+	}
+
+	.windows-intro {
+		margin: 0 0 1rem 0;
+		color: #c0c0c0;
+		font-size: 0.95rem;
+	}
+
+	.window-cards {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	}
+
+	.window-card {
+		background: #3a3a3a;
+		padding: 1rem;
+		border-radius: 6px;
+		border: 2px solid #4a4a4a;
+		transition: all 0.2s ease;
+	}
+
+	.window-card.best-window {
+		border-color: #fbbf24;
+		background: linear-gradient(135deg, #3a362a 0%, #3a3a3a 100%);
+	}
+
+	.window-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.75rem;
+	}
+
+	.window-time {
+		font-size: 1.1rem;
+		font-weight: 600;
+		color: #e8e8e8;
+	}
+
+	.best-badge {
+		background: #fbbf24;
+		color: #1a1a1a;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+	}
+
+	.window-stats {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+		color: #a0a0a0;
+	}
+
+	.window-stats span {
+		padding: 0.25rem 0.5rem;
+		background: #2f2f2f;
+		border-radius: 3px;
+		border: 1px solid #4a4a4a;
 	}
 
 	.targets-section {
@@ -318,6 +495,23 @@
 		background: #2f2f2f;
 		border-radius: 3px;
 		border: 1px solid #4a4a4a;
+	}
+
+	.target-windows {
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid #4a4a4a;
+	}
+
+	.window-hint {
+		display: inline-block;
+		padding: 0.4rem 0.75rem;
+		background: linear-gradient(135deg, #3a362a 0%, #2f2f2f 100%);
+		border: 1px solid #fbbf24;
+		border-radius: 4px;
+		color: #fbbf24;
+		font-size: 0.85rem;
+		font-weight: 600;
 	}
 
 	.equipment-info {
