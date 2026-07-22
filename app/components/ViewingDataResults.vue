@@ -7,10 +7,11 @@
 				<p class="weather-verdict">{{ weatherVerdict }}</p>
 				<div class="weather-details">
 					<p><strong>Conditions:</strong> {{ data.weather.reasons.join(', ') }}</p>
+					<p v-if="clearSummary" class="clear-summary">{{ clearSummary }}</p>
 					<div class="weather-stats">
-						<span>Cloud Cover: {{ data.weather.avgCloudCover }}/10</span>
-						<span>Seeing: {{ data.weather.avgSeeing }}/10</span>
-						<span>Transparency: {{ data.weather.avgTransparency }}/10</span>
+						<span>Cloud Cover: {{ cloudCoverPct }}</span>
+						<span>Seeing: {{ capitalize(data.weather.seeingText) }}</span>
+						<span>Transparency: {{ capitalize(data.weather.transparencyText) }}</span>
 					</div>
 				</div>
 			</div>
@@ -33,9 +34,9 @@
 						</div>
 						<div class="window-stats">
 							<span>{{ window.duration }}h duration</span>
-							<span>Cloud: {{ window.avgCloudCover }}/10</span>
-							<span>Seeing: {{ window.avgSeeing }}/10</span>
-							<span>Transparency: {{ window.avgTransparency }}/10</span>
+							<span>Cloud: {{ cloudPct(window.avgCloudCover) }}</span>
+							<span>Seeing: {{ capitalize(indexWord(window.avgSeeing)) }}</span>
+							<span>Transparency: {{ capitalize(indexWord(window.avgTransparency)) }}</span>
 						</div>
 					</div>
 				</div>
@@ -164,14 +165,50 @@
 		const quality = props.data.weather.quality
 
 		if (quality === 'partial') {
-			const windowCount = props.data.weather.viewingWindows?.length || 0
-			return `Plan around ${windowCount} clear viewing window${windowCount > 1 ? 's' : ''} tonight!`
+			const best = props.data.weather.bestWindow
+			if (best) {
+				return `Only a short clear window tonight (${best.startTime}–${best.endTime}) — mostly cloudy otherwise.`
+			}
+			return 'Only a short clear window tonight — mostly cloudy otherwise.'
 		}
 
-		return props.data.weather.worthObserving
-			? 'Great night for stargazing!'
-			: 'Not ideal for stargazing tonight.'
+		if (quality === 'excellent') return 'Great night for stargazing!'
+		if (quality === 'good') return 'Good night for stargazing.'
+		if (quality === 'unsuitable') {
+			return props.data.weather.hasRain
+				? 'Precipitation expected — not worth setting up tonight.'
+				: 'Clouded out — not worth setting up tonight.'
+		}
+		return 'Mostly cloudy tonight — not ideal for stargazing.'
 	})
+
+	const cloudCoverPct = computed(() => {
+		const pct = props.data?.weather?.cloudCoverPct
+		return pct === undefined || pct === null ? '—' : `${pct}%`
+	})
+
+	const clearSummary = computed(() => {
+		const weather = props.data?.weather
+		if (!weather || weather.clearHours === undefined || !weather.nightHours) return ''
+		if (weather.clearHours <= 0) return 'No clear sky expected during your viewing window.'
+		const pct = Math.round((weather.clearFraction ?? 0) * 100)
+		return `Clear for about ${weather.clearHours}h of your ~${weather.nightHours}h window (${pct}% of the night).`
+	})
+
+	const capitalize = (text) => {
+		if (!text) return ''
+		return text.charAt(0).toUpperCase() + text.slice(1)
+	}
+
+	// 7timer indices: cloud 1-9, seeing/transparency 1-8 (lower is better).
+	const cloudPct = (index) => `${Math.max(0, Math.min(100, Math.round(((index - 1) / 8) * 100)))}%`
+
+	const indexWord = (index) => {
+		if (index <= 2) return 'excellent'
+		if (index <= 4) return 'good'
+		if (index <= 6) return 'fair'
+		return 'poor'
+	}
 
 	const targetsTitle = computed(() => {
 		const quality = props.data?.weather?.quality
@@ -297,6 +334,11 @@
 
 	.weather-details p {
 		margin: 0.5rem 0;
+	}
+
+	.clear-summary {
+		font-weight: 600;
+		color: #e8e8e8;
 	}
 
 	.weather-stats {
