@@ -55,7 +55,7 @@
 								<img v-if="getPlanetImage(target.name)" :src="getPlanetImage(target.name)" :alt="target.name" class="planet-icon">
 								<h5>{{ target.name }}</h5>
 							</div>
-							<span class="constellation">{{ target.constellation }}</span>
+							<span class="light-distance">{{ target.lightDistance?.string }}</span>
 						</div>
 						<p class="target-reason">{{ target.reason }}</p>
 						<div class="target-details">
@@ -78,7 +78,7 @@
 								<img v-if="getPlanetImage(target.name)" :src="getPlanetImage(target.name)" :alt="target.name" class="planet-icon">
 								<h5>{{ target.name }}</h5>
 							</div>
-							<span class="constellation">{{ target.constellation }}</span>
+							<span class="light-distance">{{ target.lightDistance?.string }}</span>
 						</div>
 						<p class="target-reason">{{ target.reason }}</p>
 						<div class="target-details">
@@ -101,7 +101,7 @@
 								<img v-if="getPlanetImage(target.name)" :src="getPlanetImage(target.name)" :alt="target.name" class="planet-icon">
 								<h5>{{ target.name }}</h5>
 							</div>
-							<span class="constellation">{{ target.constellation }}</span>
+							<span class="light-distance">{{ target.lightDistance?.string }}</span>
 						</div>
 						<p class="target-reason">{{ target.reason }}</p>
 						<div class="target-details">
@@ -292,44 +292,47 @@
 	}
 
 	.weather-card {
-		background: #2f2f2f;
+		background: var(--glass-bg);
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
 		padding: 1.5rem;
-		border-radius: 8px;
-		border: 2px solid #3a3a3a;
+		border-radius: 16px;
+		border: 1px solid var(--glass-border);
+		box-shadow: var(--glass-shadow);
 		margin-bottom: 1.5rem;
 	}
 
 	.weather-card.weather-good {
-		border-color: #28a745;
-		background: linear-gradient(135deg, #2a3a2f 0%, #2f2f2f 100%);
+		border-color: rgba(40, 167, 69, 0.6);
+		background: linear-gradient(135deg, rgba(40, 167, 69, 0.22) 0%, var(--glass-bg) 70%);
 	}
 
 	.weather-card.weather-partial {
-		border-color: #fbbf24;
-		background: linear-gradient(135deg, #3a362a 0%, #2f2f2f 100%);
+		border-color: rgba(251, 191, 36, 0.6);
+		background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, var(--glass-bg) 70%);
 	}
 
 	.weather-card.weather-poor {
-		border-color: #dc3545;
-		background: linear-gradient(135deg, #3a2a2f 0%, #2f2f2f 100%);
+		border-color: rgba(220, 53, 69, 0.6);
+		background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, var(--glass-bg) 70%);
 	}
 
 	.weather-card h2 {
 		margin: 0 0 0.5rem 0;
 		font-size: 1.5rem;
-		color: #e8e8e8;
+		color: #f4f4f8;
 	}
 
 	.weather-verdict {
 		font-size: 1.1rem;
 		font-weight: 600;
 		margin: 0 0 1rem 0;
-		color: #c0c0c0;
+		color: #d0d0da;
 	}
 
 	.weather-details {
 		font-size: 0.95rem;
-		color: #a0a0a0;
+		color: #b0b0be;
 	}
 
 	.weather-details p {
@@ -338,7 +341,7 @@
 
 	.clear-summary {
 		font-weight: 600;
-		color: #e8e8e8;
+		color: #f4f4f8;
 	}
 
 	.weather-stats {
@@ -351,29 +354,33 @@
 
 	.weather-stats span {
 		padding: 0.25rem 0.75rem;
-		background: #3a3a3a;
-		border-radius: 4px;
-		color: #c0c0c0;
+		background: var(--glass-bg-light);
+		border: 1px solid var(--glass-border);
+		border-radius: 8px;
+		color: #d0d0da;
 	}
 
 	/* Viewing Windows Section */
 	.viewing-windows {
-		background: #2f2f2f;
+		background: var(--glass-bg);
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
 		padding: 1.5rem;
-		border-radius: 8px;
-		border: 2px solid #fbbf24;
+		border-radius: 16px;
+		border: 1px solid rgba(251, 191, 36, 0.5);
+		box-shadow: var(--glass-shadow);
 		margin-bottom: 1.5rem;
 	}
 
 	.viewing-windows h3 {
 		margin: 0 0 0.5rem 0;
 		font-size: 1.3rem;
-		color: #e8e8e8;
+		color: #f4f4f8;
 	}
 
 	.windows-intro {
 		margin: 0 0 1rem 0;
-		color: #c0c0c0;
+		color: #d0d0da;
 		font-size: 0.95rem;
 	}
 
@@ -384,16 +391,16 @@
 	}
 
 	.window-card {
-		background: #3a3a3a;
+		background: var(--glass-bg-light);
 		padding: 1rem;
-		border-radius: 6px;
-		border: 2px solid #4a4a4a;
+		border-radius: 12px;
+		border: 1px solid var(--glass-border);
 		transition: all 0.2s ease;
 	}
 
 	.window-card.best-window {
-		border-color: #fbbf24;
-		background: linear-gradient(135deg, #3a362a 0%, #3a3a3a 100%);
+		border-color: rgba(251, 191, 36, 0.7);
+		background: linear-gradient(135deg, rgba(251, 191, 36, 0.18) 0%, var(--glass-bg-light) 100%);
 	}
 
 	.window-header {
@@ -406,7 +413,7 @@
 	.window-time {
 		font-size: 1.1rem;
 		font-weight: 600;
-		color: #e8e8e8;
+		color: #f4f4f8;
 	}
 
 	.best-badge {
@@ -424,28 +431,31 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		font-size: 0.85rem;
-		color: #a0a0a0;
+		color: #b0b0be;
 	}
 
 	.window-stats span {
 		padding: 0.25rem 0.5rem;
-		background: #2f2f2f;
-		border-radius: 3px;
-		border: 1px solid #4a4a4a;
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: 6px;
+		border: 1px solid var(--glass-border);
 	}
 
 	.targets-section {
-		background: #2f2f2f;
+		background: var(--glass-bg);
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
 		padding: 1.5rem;
-		border-radius: 8px;
-		border: 1px solid #3a3a3a;
+		border-radius: 16px;
+		border: 1px solid var(--glass-border);
+		box-shadow: var(--glass-shadow);
 		margin-bottom: 1.5rem;
 	}
 
 	.targets-section > h3 {
 		margin: 0 0 1.5rem 0;
 		font-size: 1.3rem;
-		color: #e8e8e8;
+		color: #f4f4f8;
 	}
 
 	.target-group {
@@ -460,7 +470,7 @@
 		margin: 0 0 1rem 0;
 		font-size: 1.1rem;
 		padding-bottom: 0.5rem;
-		border-bottom: 2px solid #3a3a3a;
+		border-bottom: 1px solid var(--glass-border);
 	}
 
 	.rating-excellent {
@@ -476,11 +486,11 @@
 	}
 
 	.target-card {
-		background: #3a3a3a;
+		background: var(--glass-bg-light);
 		padding: 1rem;
-		border-radius: 6px;
+		border-radius: 12px;
 		margin-bottom: 0.75rem;
-		border: 1px solid #4a4a4a;
+		border: 1px solid var(--glass-border);
 	}
 
 	.target-card:last-child {
@@ -497,7 +507,7 @@
 	.target-header h5 {
 		margin: 0;
 		font-size: 1.1rem;
-		color: #e8e8e8;
+		color: #f4f4f8;
 	}
 
 	.target-title {
@@ -512,15 +522,16 @@
 		object-fit: contain;
 	}
 
-	.constellation {
+	.light-distance {
 		font-size: 0.85rem;
-		color: #999;
+		color: #b8b8c4;
 		font-style: italic;
+		text-align: right;
 	}
 
 	.target-reason {
 		margin: 0 0 0.75rem 0;
-		color: #c0c0c0;
+		color: #d0d0da;
 		font-size: 0.95rem;
 	}
 
@@ -529,40 +540,43 @@
 		gap: 1rem;
 		flex-wrap: wrap;
 		font-size: 0.85rem;
-		color: #999;
+		color: #b0b0be;
 	}
 
 	.target-details span {
 		padding: 0.25rem 0.5rem;
-		background: #2f2f2f;
-		border-radius: 3px;
-		border: 1px solid #4a4a4a;
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: 6px;
+		border: 1px solid var(--glass-border);
 	}
 
 	.target-windows {
 		margin-top: 0.75rem;
 		padding-top: 0.75rem;
-		border-top: 1px solid #4a4a4a;
+		border-top: 1px solid var(--glass-border);
 	}
 
 	.window-hint {
 		display: inline-block;
 		padding: 0.4rem 0.75rem;
-		background: linear-gradient(135deg, #3a362a 0%, #2f2f2f 100%);
-		border: 1px solid #fbbf24;
-		border-radius: 4px;
-		color: #fbbf24;
+		background: rgba(251, 191, 36, 0.14);
+		border: 1px solid rgba(251, 191, 36, 0.6);
+		border-radius: 8px;
+		color: #fcd34d;
 		font-size: 0.85rem;
 		font-weight: 600;
 	}
 
 	.equipment-info {
-		background: #2f2f2f;
+		background: var(--glass-bg);
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
 		padding: 1rem;
-		border-radius: 6px;
+		border-radius: 16px;
 		font-size: 0.9rem;
-		color: #c0c0c0;
-		border: 1px solid #3a3a3a;
+		color: #d0d0da;
+		border: 1px solid var(--glass-border);
+		box-shadow: var(--glass-shadow);
 	}
 
 	.equipment-info p {

@@ -1,21 +1,37 @@
 <template>
+	<div class="starfield" aria-hidden="true">
+		<NuxtImg
+			src="/stars.jpg"
+			alt=""
+			class="starfield__img"
+			loading="lazy"
+			format="webp"
+			quality="80"
+		/>
+	</div>
+
 	<div class="container">
 		<h1>Astronomy Buddy</h1>
 
-		<div v-if="viewingData && !showForm" class="current-params">
+		<div v-if="savedParams && !showForm" class="current-params">
 			<p class="current-location">📍 {{ locationLabel }}</p>
 			<p class="current-details">{{ paramsSummary }}</p>
-			<button class="toggle-form-btn" @click="showForm = true">
+			<button class="toggle-form-btn" :disabled="isFetching" @click="showForm = true">
 				Change Location or Parameters
 			</button>
 		</div>
 
 		<LocationForm
-			v-show="showForm || !viewingData"
+			v-show="showForm || !savedParams"
 			:is-fetching="isFetching"
 			:initial="savedParams"
 			@submit="handleFormSubmit"
 		/>
+
+		<div v-if="isFetching" class="loading-indicator">
+			<span class="spinner" />
+			<span>Checking tonight's sky…</span>
+		</div>
 
 		<ViewingDataResults :data="viewingData" />
 	</div>
@@ -113,10 +129,47 @@
 </script>
 
 <style>
+	:root {
+		/* Shared "liquid glass" tokens used across components */
+		--glass-bg: rgba(18, 18, 28, 0.12);
+		--glass-bg-strong: rgba(18, 18, 28, 0.22);
+		--glass-bg-light: rgba(255, 255, 255, 0.03);
+		--glass-border: rgba(255, 255, 255, 0.14);
+		--glass-blur: blur(8px) saturate(150%);
+		--glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
 	body {
-		background: #212121;
+		/* Dark base shown behind the starfield while it lazy-loads */
+		background: #06060c;
 		margin: 0;
 		padding: 0;
+	}
+
+	/* Full-viewport starfield background */
+	.starfield {
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		overflow: hidden;
+	}
+
+	.starfield__img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	/* Subtle vignette so foreground text keeps contrast without hiding the stars */
+	.starfield::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background:
+			radial-gradient(ellipse at 50% 30%, rgba(6, 6, 12, 0) 0%, rgba(6, 6, 12, 0.45) 100%),
+			linear-gradient(180deg, rgba(6, 6, 12, 0.15) 0%, rgba(6, 6, 12, 0.3) 100%);
+		pointer-events: none;
 	}
 </style>
 
@@ -131,39 +184,90 @@
 	h1 {
 		text-align: center;
 		margin-bottom: 2rem;
-		color: #e8e8e8;
+		font-family: 'Cause', sans-serif;
+		font-weight: 700;
+		font-size: 2.75rem;
+		letter-spacing: 0.02em;
+		color: #f4f4f8;
+		text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 	}
 
 	.current-params {
 		margin-bottom: 1.5rem;
+		padding: 1.25rem;
 		text-align: center;
+		background: var(--glass-bg);
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
+		border: 1px solid var(--glass-border);
+		border-radius: 16px;
+		box-shadow: var(--glass-shadow);
 	}
 
 	.current-location {
 		margin: 0 0 0.25rem 0;
 		font-size: 1.15rem;
 		font-weight: 600;
-		color: #e8e8e8;
+		color: #f4f4f8;
 	}
 
 	.current-details {
 		margin: 0 0 0.75rem 0;
 		font-size: 0.9rem;
-		color: #999;
+		color: #b8b8c4;
 	}
 
 	.toggle-form-btn {
 		width: 100%;
 		padding: 0.75rem;
-		background: #3a3a3a;
-		color: #e8e8e8;
-		border: 1px solid #4a4a4a;
-		border-radius: 4px;
+		background: var(--glass-bg-light);
+		color: #f4f4f8;
+		border: 1px solid var(--glass-border);
+		border-radius: 10px;
 		font-size: 1rem;
 		cursor: pointer;
+		transition: background 0.2s ease;
 	}
 
-	.toggle-form-btn:hover {
-		background: #444;
+	.toggle-form-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	.toggle-form-btn:hover:not(:disabled) {
+		background: rgba(255, 255, 255, 0.12);
+	}
+
+	.loading-indicator {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		margin: 0 auto 1.5rem;
+		padding: 1rem 1.5rem;
+		width: fit-content;
+		color: #e8e8ee;
+		font-size: 1rem;
+		background: var(--glass-bg);
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
+		border: 1px solid var(--glass-border);
+		border-radius: 999px;
+		box-shadow: var(--glass-shadow);
+	}
+
+	.spinner {
+		width: 1.25rem;
+		height: 1.25rem;
+		border: 2px solid rgba(255, 255, 255, 0.25);
+		border-top-color: #7aa2ff;
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

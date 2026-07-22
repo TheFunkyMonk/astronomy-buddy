@@ -106,7 +106,7 @@
 		latitude: '',
 		longitude: '',
 		elevation: '',
-		viewingLevel: 'naked-eye',
+		viewingLevel: 'entry',
 		eveningStartHour: 21,
 		eveningEndHour: 2
 	})
@@ -189,23 +189,26 @@
 
 <style scoped>
 	.location-form {
-		background: #2f2f2f;
+		background: var(--glass-bg);
+		backdrop-filter: var(--glass-blur);
+		-webkit-backdrop-filter: var(--glass-blur);
 		padding: 2rem;
-		border-radius: 8px;
-		border: 1px solid #3a3a3a;
+		border-radius: 16px;
+		border: 1px solid var(--glass-border);
+		box-shadow: var(--glass-shadow);
 	}
 
 	h2 {
 		margin-top: 0;
 		margin-bottom: 1.5rem;
-		color: #e8e8e8;
+		color: #f4f4f8;
 	}
 
 	h3 {
 		margin-top: 1.5rem;
 		margin-bottom: 1rem;
 		font-size: 1.1rem;
-		color: #e8e8e8;
+		color: #f4f4f8;
 	}
 
 	.form-group {
@@ -216,29 +219,30 @@
 		display: block;
 		margin-bottom: 0.5rem;
 		font-weight: 500;
-		color: #c0c0c0;
+		color: #c8c8d4;
 	}
 
 	input,
 	select {
 		width: 100%;
 		padding: 0.5rem;
-		border: 1px solid #4a4a4a;
-		border-radius: 4px;
+		border: 1px solid var(--glass-border);
+		border-radius: 8px;
 		font-size: 1rem;
 		box-sizing: border-box;
-		background: #3a3a3a;
-		color: #e8e8e8;
+		background: rgba(255, 255, 255, 0.08);
+		color: #f4f4f8;
 	}
 
 	input:focus,
 	select:focus {
 		outline: none;
-		border-color: #0066cc;
+		border-color: #7aa2ff;
+		background: rgba(255, 255, 255, 0.12);
 	}
 
 	input::placeholder {
-		color: #707070;
+		color: #8a8a98;
 	}
 
 	button {
