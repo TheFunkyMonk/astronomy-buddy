@@ -73,7 +73,7 @@
 			>
 		</div>
 
-		<button @click="handleSubmit" :disabled="isFetching || !canSubmit" class="submit-btn">
+		<button :disabled="isFetching || !canSubmit" class="submit-btn" @click="handleSubmit">
 			{{ isFetching ? 'Loading...' : 'Get Viewing Data' }}
 		</button>
 
@@ -85,6 +85,17 @@
 
 <script setup>
 	import useGeolocation from '../../composables/useGeolocation'
+
+	const props = defineProps({
+		isFetching: {
+			type: Boolean,
+			default: false
+		},
+		initial: {
+			type: Object,
+			default: null
+		}
+	})
 
 	const emit = defineEmits(['submit'])
 
@@ -105,6 +116,32 @@
 	// Time inputs in HH:MM format
 	const eveningStartTime = ref('21:00')
 	const eveningEndTime = ref('02:00')
+
+	const hourToTimeString = (hour) => `${String(hour).padStart(2, '0')}:00`
+
+	// Prefill the form from previously saved params (passed in by the parent).
+	// Applied via a watcher so it also runs when the saved data is restored
+	// asynchronously on the client after mount.
+	const applyInitial = (init) => {
+		if (!init) return
+
+		if (init.latitude !== undefined && init.latitude !== null) formData.value.latitude = init.latitude
+		if (init.longitude !== undefined && init.longitude !== null) formData.value.longitude = init.longitude
+		if (init.elevation !== undefined && init.elevation !== null) formData.value.elevation = init.elevation
+		if (init.viewingLevel) formData.value.viewingLevel = init.viewingLevel
+
+		if (init.eveningStartHour !== undefined && init.eveningStartHour !== null) {
+			formData.value.eveningStartHour = init.eveningStartHour
+			eveningStartTime.value = hourToTimeString(init.eveningStartHour)
+		}
+
+		if (init.eveningEndHour !== undefined && init.eveningEndHour !== null) {
+			formData.value.eveningEndHour = init.eveningEndHour
+			eveningEndTime.value = hourToTimeString(init.eveningEndHour)
+		}
+	}
+
+	watch(() => props.initial, applyInitial, { immediate: true })
 
 	// Watch time inputs and convert to 24-hour format
 	watch(eveningStartTime, (newTime) => {
