@@ -35,6 +35,8 @@
 
 		<ViewingDataResults :data="viewingData" />
 	</div>
+
+	<component :is="DevConditionSwitcher" v-if="DevConditionSwitcher" @select="applyMock" @live="clearMock" />
 </template>
 
 <script setup>
@@ -47,6 +49,40 @@
 	const showForm = ref(true)
 	const savedParams = ref(null)
 	const savedLocationName = ref('')
+
+	// Dev-only condition simulator. In production builds `import.meta.dev` is a
+	// static `false`, so the ternary is dead-code eliminated and the component
+	// chunk is never bundled or rendered.
+	const isMock = ref(false)
+	const DevConditionSwitcher = import.meta.dev
+		? defineAsyncComponent(() => import('./components/DevConditionSwitcher.vue'))
+		: null
+
+	const applyMock = (data) => {
+		isMock.value = true
+		if (!savedParams.value) {
+			// Give the summary header something to show in a fresh dev session
+			// (in-memory only — never persisted).
+			savedParams.value = { viewingLevel: 'entry', eveningStartHour: 21, eveningEndHour: 2 }
+		}
+		viewingData.value = data
+		showForm.value = false
+	}
+
+	const clearMock = () => {
+		isMock.value = false
+		viewingData.value = null
+		if (load()) {
+			const stored = load()
+			savedParams.value = stored
+			savedLocationName.value = stored.locationName || ''
+			fetchViewingData(stored)
+			showForm.value = false
+		} else {
+			savedParams.value = null
+			showForm.value = true
+		}
+	}
 
 	const VIEWING_LEVEL_LABELS = {
 		'naked-eye': 'Naked eye',
@@ -82,6 +118,9 @@
 
 		// Scroll to top when viewing data is loaded
 		window.scrollTo({ top: 0, behavior: 'smooth' })
+
+		// Never persist simulated data (dev condition switcher)
+		if (isMock.value) return
 
 		// Capture the API-resolved friendly location name and persist it so it
 		// shows instantly on the next visit (before the fresh fetch resolves).
