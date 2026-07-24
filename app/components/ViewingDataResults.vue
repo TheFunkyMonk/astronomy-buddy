@@ -6,8 +6,8 @@
 				<h2>{{ weatherEmoji }} {{ weatherTitle }}</h2>
 				<p class="weather-verdict">{{ weatherVerdict }}</p>
 				<div class="weather-details">
-					<p><strong>Conditions:</strong> {{ data.weather.reasons.join(', ') }}</p>
 					<p v-if="clearSummary" class="clear-summary">{{ clearSummary }}</p>
+					<p v-if="data.weather.reasons?.length"><strong>Conditions:</strong> {{ data.weather.reasons.join(', ') }}</p>
 					<div class="weather-stats">
 						<span>Cloud Cover: {{ cloudCoverPct }}</span>
 						<span>Seeing: {{ capitalize(data.weather.seeingText) }}</span>

@@ -223,7 +223,7 @@
 	h1 {
 		text-align: center;
 		margin-bottom: 2rem;
-		font-family: 'Cause', sans-serif;
+		font-family: 'Google Sans Flex', sans-serif;
 		font-weight: 700;
 		font-size: 2.75rem;
 		letter-spacing: 0.02em;
