@@ -160,40 +160,15 @@
 		return quality.charAt(0).toUpperCase() + quality.slice(1) + ' Conditions'
 	})
 
-	const weatherVerdict = computed(() => {
-		if (!props.data?.weather) return ''
-		const quality = props.data.weather.quality
-
-		if (quality === 'partial') {
-			const best = props.data.weather.bestWindow
-			if (best) {
-				return `Only a short clear window tonight (${best.startTime}–${best.endTime}) — mostly cloudy otherwise.`
-			}
-			return 'Only a short clear window tonight — mostly cloudy otherwise.'
-		}
-
-		if (quality === 'excellent') return 'Great night for stargazing!'
-		if (quality === 'good') return 'Good night for stargazing.'
-		if (quality === 'unsuitable') {
-			return props.data.weather.hasRain
-				? 'Precipitation expected — not worth setting up tonight.'
-				: 'Clouded out — not worth setting up tonight.'
-		}
-		return 'Mostly cloudy tonight — not ideal for stargazing.'
-	})
+	// Verdict + summary copy is produced by the API so all surfaces stay in sync.
+	const weatherVerdict = computed(() => props.data?.weather?.verdict ?? '')
 
 	const cloudCoverPct = computed(() => {
 		const pct = props.data?.weather?.cloudCoverPct
 		return pct === undefined || pct === null ? '—' : `${pct}%`
 	})
 
-	const clearSummary = computed(() => {
-		const weather = props.data?.weather
-		if (!weather || weather.clearHours === undefined || !weather.nightHours) return ''
-		if (weather.clearHours <= 0) return 'No clear sky expected during your viewing window.'
-		const pct = Math.round((weather.clearFraction ?? 0) * 100)
-		return `Clear for about ${weather.clearHours}h of your ~${weather.nightHours}h window (${pct}% of the night).`
-	})
+	const clearSummary = computed(() => props.data?.weather?.summary ?? '')
 
 	const capitalize = (text) => {
 		if (!text) return ''
