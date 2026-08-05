@@ -9,13 +9,17 @@
 					<p v-if="clearSummary" class="clear-summary">{{ clearSummary }}</p>
 					<p v-if="data.weather.reasons?.length"><strong>Conditions:</strong> {{ data.weather.reasons.join(', ') }}</p>
 
-					<!-- What the aerosols cost you optically, kept separate from
-					     whether the air is healthy to stand around in. -->
-					<p v-if="aerosolImpact" class="air-notice air-notice--optical">
-						<span aria-hidden="true">🌫️</span> {{ aerosolImpact }}
-					</p>
-					<p v-if="healthAdvisory" class="air-notice air-notice--health">
-						<span aria-hidden="true">⚠️</span> {{ healthAdvisory }}
+					<!--
+						Advisories, looped blindly rather than read as named fields, so any
+						advisory the API adds in future renders here with no code change.
+					-->
+					<p
+						v-for="notice in notices"
+						:key="notice.kind ?? notice.text"
+						class="air-notice"
+						:class="`air-notice--${notice.severity ?? 'caution'}`"
+					>
+						<span aria-hidden="true">{{ noticeEmoji(notice) }}</span> {{ notice.text }}
 					</p>
 
 					<div class="weather-stats">
@@ -156,25 +160,59 @@
 		}
 	}, { immediate: true })
 
+	// The API supplies presentation directives (`weather.display`, `weather.notices`)
+	// so that retuning the weather model does not require redeploying the front
+	// ends. This app owns only two stable lookup tables -- severity to CSS class,
+	// and icon token to emoji. Every directive read falls back to the older local
+	// derivation, so this build works against an API deployed either side of the
+	// change.
+	const display = computed(() => props.data?.weather?.display ?? null)
+
+	// Presentation severity: how alarmed to look, not what is wrong.
+	const SEVERITY_CLASSES = {
+		positive: 'weather-good',
+		neutral: 'weather-neutral',
+		caution: 'weather-partial',
+		warning: 'weather-smoky',
+		critical: 'weather-poor'
+	}
+
+	const ICON_EMOJI = {
+		sparkles: '✨',
+		star: '🌟',
+		'partly-cloudy': '⛅',
+		cloudy: '☁️',
+		rain: '🌧️',
+		smoke: '🌫️',
+		dust: '🌫️',
+		health: '⚠️'
+	}
+
 	const weatherClass = computed(() => {
 		if (!props.data?.weather) return ''
+		const severity = display.value?.severity
+		if (severity && SEVERITY_CLASSES[severity]) return SEVERITY_CLASSES[severity]
+
+		// Fallback: derive locally as before.
 		const quality = props.data.weather.quality
-		// The API can legitimately call a smoke-hazed night "good" -- bright
-		// planets really are fine -- but a green card above a smoke warning
-		// undercuts the message, so the styling follows the air.
 		if (smokeDominates.value) return 'weather-smoky'
 		if (quality === 'partial') return 'weather-partial'
 		return props.data.weather.worthObserving ? 'weather-good' : 'weather-poor'
 	})
 
 	// True once aerosols, not cloud, are the limiting factor for the night.
+	// Prefers the API's flag so retuning its tiers needs no redeploy here.
 	const smokeDominates = computed(() => {
-		const level = props.data?.weather?.airQuality?.level
-		return level === 'significant' || level === 'heavy'
+		const air = props.data?.weather?.airQuality
+		if (air?.dominatesView !== undefined) return air.dominatesView
+		return air?.level === 'significant' || air?.level === 'heavy'
 	})
 
 	const weatherEmoji = computed(() => {
 		if (!props.data?.weather) return '🌤️'
+		const icon = display.value?.icon
+		if (icon && ICON_EMOJI[icon]) return ICON_EMOJI[icon]
+
 		const quality = props.data.weather.quality
 		if (smokeDominates.value) return '🌫️'
 		if (quality === 'partial') return '⛅'
@@ -183,9 +221,38 @@
 
 	const weatherTitle = computed(() => {
 		if (!props.data?.weather) return 'Checking Conditions'
+		if (display.value?.heading) return display.value.heading
+
 		const quality = props.data.weather.quality
 		return quality.charAt(0).toUpperCase() + quality.slice(1) + ' Conditions'
 	})
+
+	// Advisories, rendered by looping rather than reading named fields, so any
+	// advisory the API adds in future appears with no change here.
+	const notices = computed(() => {
+		const fromApi = props.data?.weather?.notices
+		if (Array.isArray(fromApi) && fromApi.length) {
+			return fromApi.filter(n => n?.text)
+		}
+
+		const air = airQuality.value
+		if (!air) return []
+		const fallback = []
+		if (air.dimsView && air.transparencyImpact) {
+			fallback.push({
+				kind: 'aerosol',
+				severity: smokeDominates.value ? 'warning' : 'caution',
+				icon: air.aerosolType === 'dust' ? 'dust' : 'smoke',
+				text: air.transparencyImpact
+			})
+		}
+		if (air.healthAdvisory) {
+			fallback.push({ kind: 'health', severity: 'caution', icon: 'health', text: air.healthAdvisory })
+		}
+		return fallback
+	})
+
+	const noticeEmoji = (notice) => ICON_EMOJI[notice?.icon] ?? 'ℹ️'
 
 	// Verdict + summary copy is produced by the API so all surfaces stay in sync.
 	const weatherVerdict = computed(() => props.data?.weather?.verdict ?? '')
@@ -200,13 +267,6 @@
 	// Absent when the API could not reach its air quality upstream, or when it
 	// predates aerosol support -- every read here is optional.
 	const airQuality = computed(() => props.data?.weather?.airQuality ?? null)
-
-	const aerosolImpact = computed(() => {
-		const air = airQuality.value
-		return air?.dimsView ? (air.transparencyImpact ?? '') : ''
-	})
-
-	const healthAdvisory = computed(() => airQuality.value?.healthAdvisory ?? '')
 
 	const capitalize = (text) => {
 		if (!text) return ''
@@ -224,6 +284,8 @@
 	}
 
 	const targetsTitle = computed(() => {
+		if (display.value?.targetsHeading) return display.value.targetsHeading
+
 		const quality = props.data?.weather?.quality
 		const worth = props.data?.weather?.worthObserving
 
@@ -340,6 +402,11 @@
 		background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, var(--glass-bg) 70%);
 	}
 
+	.weather-card.weather-neutral {
+		border-color: rgba(120, 144, 176, 0.6);
+		background: linear-gradient(135deg, rgba(120, 144, 176, 0.18) 0%, var(--glass-bg) 70%);
+	}
+
 	.weather-card.weather-smoky {
 		border-color: rgba(214, 137, 16, 0.6);
 		background: linear-gradient(135deg, rgba(214, 137, 16, 0.2) 0%, var(--glass-bg) 70%);
@@ -360,13 +427,31 @@
 		line-height: 1.45;
 	}
 
-	.air-notice--optical {
+	.air-notice--positive {
+		background: rgba(40, 167, 69, 0.14);
+		border: 1px solid rgba(40, 167, 69, 0.3);
+		color: #d3ecd9;
+	}
+
+	.air-notice--neutral {
+		background: rgba(120, 144, 176, 0.14);
+		border: 1px solid rgba(120, 144, 176, 0.3);
+		color: #dbe3ee;
+	}
+
+	.air-notice--caution {
+		background: rgba(251, 191, 36, 0.14);
+		border: 1px solid rgba(251, 191, 36, 0.3);
+		color: #efe4c6;
+	}
+
+	.air-notice--warning {
 		background: rgba(214, 137, 16, 0.14);
 		border: 1px solid rgba(214, 137, 16, 0.3);
 		color: #e8ddc8;
 	}
 
-	.air-notice--health {
+	.air-notice--critical {
 		background: rgba(220, 53, 69, 0.14);
 		border: 1px solid rgba(220, 53, 69, 0.3);
 		color: #f0d4d7;
