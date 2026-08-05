@@ -27,8 +27,13 @@
 				</div>
 			</div>
 
-			<!-- Viewing Windows (for partial conditions) -->
-			<div v-if="data.weather.viewingWindows?.length" class="viewing-windows">
+			<!--
+				Viewing Windows (for partial conditions). Hidden when smoke is the
+				limiting factor: the sky can be cloudless all night while only the
+				part overhead is usable, so a "clear window" spanning the whole night
+				reads as good news when it is not.
+			-->
+			<div v-if="data.weather.viewingWindows?.length && !smokeDominates" class="viewing-windows">
 				<h3>⏰ Clear Viewing Windows</h3>
 				<p class="windows-intro">Take advantage of these clear periods for the best stargazing:</p>
 
@@ -220,12 +225,22 @@
 
 	const targetsTitle = computed(() => {
 		const quality = props.data?.weather?.quality
+		const worth = props.data?.weather?.worthObserving
+
+		// Significant smoke produces `partial`, but on a cloudless smoky night
+		// "During Clear Windows" is wrong -- the sky is clear the whole time and it
+		// is altitude, not timing, that limits you.
+		if (smokeDominates.value) {
+			return worth
+				? 'What to Look For High Overhead'
+				: 'Best Positioned Objects (Despite the Smoke)'
+		}
 
 		if (quality === 'partial') {
 			return 'What to Look For During Clear Windows'
 		}
 
-		return props.data?.weather?.worthObserving
+		return worth
 			? 'What to Look For Tonight'
 			: 'Best Positioned Objects (Despite Conditions)'
 	})
