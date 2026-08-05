@@ -97,6 +97,52 @@
 			)
 		},
 		{
+			id: 'smoky',
+			label: '🌫️ Smoky',
+			data: base(
+				{
+					quality: 'good', worthObserving: true, hasRain: false, cloudCoverPct: 4,
+					seeingText: 'good', transparencyText: 'poor', clearHours: 5, nightHours: 5, clearFraction: 1,
+					reasons: ['steady atmosphere', 'heavy smoke haze'],
+					verdict: 'Clear skies, but heavy smoke haze will wash out fainter stars — the Moon and bright planets still look good.',
+					summary: 'Clear skies the entire night.',
+					airQuality: {
+						aod: 0.68, aodPeak: 0.73, level: 'significant', aerosolType: 'smoke',
+						extinctionMagnitudes: 0.74, pm25: 45.2, dust: 0, usAqi: 130,
+						healthCategory: 'sensitive',
+						healthAdvisory: 'Air quality is unhealthy for sensitive groups (AQI 130) — go easy if smoke bothers you.',
+						label: 'Heavy smoke haze',
+						transparencyImpact: 'Heavy smoke haze is costing roughly 0.7 magnitudes at the zenith — expect fainter stars to be washed out, though the Moon and bright planets cut through fine.',
+						dimsView: true
+					}
+				},
+				{ excellent: [T.jupiter('excellent')], good: [T.saturn('good'), T.mars('good')], fair: [] }
+			)
+		},
+		{
+			id: 'heavy-smoke',
+			label: '🔥 Heavy Smoke',
+			data: base(
+				{
+					quality: 'poor', worthObserving: false, hasRain: false, cloudCoverPct: 6,
+					seeingText: 'good', transparencyText: 'poor', clearHours: 5, nightHours: 5, clearFraction: 1,
+					reasons: ['steady atmosphere', 'very heavy smoke'],
+					verdict: 'Very heavy smoke tonight — the sky may be clear, but it is washed out. Worth waiting for cleaner air.',
+					summary: 'Clear skies the entire night.',
+					airQuality: {
+						aod: 1.4, aodPeak: 1.55, level: 'heavy', aerosolType: 'smoke',
+						extinctionMagnitudes: 1.52, pm25: 120, dust: 0, usAqi: 210,
+						healthCategory: 'very-unhealthy',
+						healthAdvisory: 'Air quality is very unhealthy (AQI 210) — better to sit this one out.',
+						label: 'Very heavy smoke',
+						transparencyImpact: 'Very heavy smoke is costing roughly 1.5 magnitudes at the zenith and more low in the sky, washing out all but the brightest objects.',
+						dimsView: true
+					}
+				},
+				{ excellent: [], good: [], fair: [T.jupiter('fair'), T.saturn('fair')] }
+			)
+		},
+		{
 			id: 'partial',
 			label: '⛅ Partial',
 			data: base(

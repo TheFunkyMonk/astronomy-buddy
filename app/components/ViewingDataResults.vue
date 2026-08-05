@@ -8,10 +8,21 @@
 				<div class="weather-details">
 					<p v-if="clearSummary" class="clear-summary">{{ clearSummary }}</p>
 					<p v-if="data.weather.reasons?.length"><strong>Conditions:</strong> {{ data.weather.reasons.join(', ') }}</p>
+
+					<!-- What the aerosols cost you optically, kept separate from
+					     whether the air is healthy to stand around in. -->
+					<p v-if="aerosolImpact" class="air-notice air-notice--optical">
+						<span aria-hidden="true">🌫️</span> {{ aerosolImpact }}
+					</p>
+					<p v-if="healthAdvisory" class="air-notice air-notice--health">
+						<span aria-hidden="true">⚠️</span> {{ healthAdvisory }}
+					</p>
+
 					<div class="weather-stats">
 						<span>Cloud Cover: {{ cloudCoverPct }}</span>
 						<span>Seeing: {{ capitalize(data.weather.seeingText) }}</span>
 						<span>Transparency: {{ capitalize(data.weather.transparencyText) }}</span>
+						<span v-if="airQuality?.usAqi != null">Air: AQI {{ airQuality.usAqi }}</span>
 					</div>
 				</div>
 			</div>
@@ -143,13 +154,24 @@
 	const weatherClass = computed(() => {
 		if (!props.data?.weather) return ''
 		const quality = props.data.weather.quality
+		// The API can legitimately call a smoke-hazed night "good" -- bright
+		// planets really are fine -- but a green card above a smoke warning
+		// undercuts the message, so the styling follows the air.
+		if (smokeDominates.value) return 'weather-smoky'
 		if (quality === 'partial') return 'weather-partial'
 		return props.data.weather.worthObserving ? 'weather-good' : 'weather-poor'
+	})
+
+	// True once aerosols, not cloud, are the limiting factor for the night.
+	const smokeDominates = computed(() => {
+		const level = props.data?.weather?.airQuality?.level
+		return level === 'significant' || level === 'heavy'
 	})
 
 	const weatherEmoji = computed(() => {
 		if (!props.data?.weather) return '🌤️'
 		const quality = props.data.weather.quality
+		if (smokeDominates.value) return '🌫️'
 		if (quality === 'partial') return '⛅'
 		return props.data.weather.worthObserving ? '🌟' : '☁️'
 	})
@@ -169,6 +191,17 @@
 	})
 
 	const clearSummary = computed(() => props.data?.weather?.summary ?? '')
+
+	// Absent when the API could not reach its air quality upstream, or when it
+	// predates aerosol support -- every read here is optional.
+	const airQuality = computed(() => props.data?.weather?.airQuality ?? null)
+
+	const aerosolImpact = computed(() => {
+		const air = airQuality.value
+		return air?.dimsView ? (air.transparencyImpact ?? '') : ''
+	})
+
+	const healthAdvisory = computed(() => airQuality.value?.healthAdvisory ?? '')
 
 	const capitalize = (text) => {
 		if (!text) return ''
@@ -292,10 +325,36 @@
 		background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, var(--glass-bg) 70%);
 	}
 
+	.weather-card.weather-smoky {
+		border-color: rgba(214, 137, 16, 0.6);
+		background: linear-gradient(135deg, rgba(214, 137, 16, 0.2) 0%, var(--glass-bg) 70%);
+	}
+
 	.weather-card h2 {
 		margin: 0 0 0.5rem 0;
 		font-size: 1.5rem;
 		color: #f4f4f8;
+	}
+
+	.air-notice {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding: 0.6rem 0.75rem;
+		border-radius: 10px;
+		line-height: 1.45;
+	}
+
+	.air-notice--optical {
+		background: rgba(214, 137, 16, 0.14);
+		border: 1px solid rgba(214, 137, 16, 0.3);
+		color: #e8ddc8;
+	}
+
+	.air-notice--health {
+		background: rgba(220, 53, 69, 0.14);
+		border: 1px solid rgba(220, 53, 69, 0.3);
+		color: #f0d4d7;
 	}
 
 	.weather-verdict {
