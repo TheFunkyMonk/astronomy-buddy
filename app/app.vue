@@ -36,19 +36,13 @@
 		<ViewingDataResults :data="viewingData" />
 
 		<footer class="app-footer">
-			<!-- Once live, set appStoreURL below and this becomes a real link. -->
 			<a
-				v-if="appStoreURL"
 				class="appstore-badge"
 				:href="appStoreURL"
 				aria-label="Download Astronomy Buddy on the App Store"
 			>
 				<img class="appstore-badge__img" src="/app-store-badge.svg" alt="Download on the App Store">
 			</a>
-			<div v-else class="appstore-soon" aria-label="Coming soon to the App Store">
-				<span class="appstore-soon__label">Coming soon</span>
-				<img class="appstore-badge__img appstore-badge__img--soon" src="/app-store-badge.svg" alt="Coming soon to the App Store">
-			</div>
 		</footer>
 	</div>
 
@@ -62,9 +56,7 @@
 	const { viewingData, isFetching, fetchViewingData } = useAstronomyAPI()
 	const { load, save } = useSavedParams()
 
-	// Set to your App Store URL once the app is live (e.g. 'https://apps.apple.com/app/idXXXXXXXXX').
-	// While null, the footer shows a "Coming soon" badge instead of a live link.
-	const appStoreURL = null
+	const appStoreURL = 'https://apps.apple.com/us/app/astronomy-buddy/id6794154608'
 
 	const showForm = ref(true)
 	const savedParams = ref(null)
@@ -352,24 +344,5 @@
 		display: block;
 		height: 48px;
 		width: auto;
-	}
-
-	.appstore-soon {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.appstore-soon__label {
-		font-size: 0.7rem;
-		font-weight: 600;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #b8b8c4;
-	}
-
-	.appstore-badge__img--soon {
-		opacity: 0.55;
 	}
 </style>
